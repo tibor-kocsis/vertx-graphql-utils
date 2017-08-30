@@ -1,0 +1,25 @@
+apply plugin: 'java'
+
+repositories {
+    jcenter()
+}
+
+ext {
+	vertxVersion = "3.4.2"
+}
+
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+	
+dependencies {
+	compile "io.vertx:vertx-core:$vertxVersion"
+	compile "io.vertx:vertx-web:$vertxVersion"
+	compile "io.vertx:vertx-rx-java:$vertxVersion"
+	compile 'com.graphql-java:graphql-java:3.0.0'
+	compile 'org.apache.commons:commons-lang3:3.1'
+	
+	testCompile 'junit:junit:4.12'
+	testCompile "io.vertx:vertx-unit:$vertxVersion"
+	testCompile "io.vertx:vertx-web-client:$vertxVersion"
+}
+
