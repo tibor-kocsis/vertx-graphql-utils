@@ -1,5 +1,6 @@
 package com.github.tkocsis.vertx.graphql.queryexecutor.impl;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,7 +40,10 @@ public class AsyncGraphQLExecImpl implements AsyncGraphQLExec {
 		}).subscribe(e -> {
 			fut.complete(new JsonObject(e));
 		}, error -> {
-			fut.fail(error);
+			Map<String, Object> res = new HashMap<>();
+			res.put("errors", Arrays.asList(error));
+			res.put("data", null);
+			fut.complete(new JsonObject(res));
 		});
 		return fut;
 	}

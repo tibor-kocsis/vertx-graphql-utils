@@ -118,9 +118,12 @@ public class AsyncGraphQLExecTest {
 		AsyncGraphQLExec asyncGraphQL = AsyncGraphQLExec.create(schema);
 		Future<JsonObject> queryResult = asyncGraphQL.executeQuery("query { hello }", null, null, null);
 		queryResult.setHandler(res -> {
-			context.assertTrue(res.failed());
-			context.assertEquals(RuntimeException.class, res.cause().getClass());
-			context.assertEquals("TestFailure", res.cause().getMessage());
+			JsonObject json = res.result();
+			System.out.println(json.encodePrettily());
+			
+			context.assertNull(json.getJsonObject("data"));
+			context.assertTrue(json.containsKey("errors"));
+			context.assertTrue(json.getJsonArray("errors").size() > 0);
 			async.complete();
 		});
 	}

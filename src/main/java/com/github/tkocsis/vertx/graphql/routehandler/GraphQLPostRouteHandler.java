@@ -1,14 +1,13 @@
 package com.github.tkocsis.vertx.graphql.routehandler;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.github.tkocsis.vertx.graphql.queryexecutor.AsyncGraphQLExec;
-import com.github.tkocsis.vertx.graphql.routehandler.internal.ExceptionConvert;
 
 import graphql.schema.GraphQLSchema;
 import io.vertx.core.Handler;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
@@ -36,9 +35,10 @@ public class GraphQLPostRouteHandler {
 					JsonObject json = queryResult.result();
 					rountingContext.response().end(json.encodePrettily());
 				} else {
-					JsonObject errorResult = new JsonObject()
-							.put("data", new JsonObject())
-							.put("errors", queryResult.cause() != null ? ExceptionConvert.toJsonArray(queryResult.cause()) : new JsonArray().add("Internal error"));
+					Map<String, Object> res = new HashMap<>();
+					res.put("errors", queryResult.cause() != null ? Arrays.asList(queryResult.cause()) : Arrays.asList(new Exception("Internal error")));
+					res.put("data", null);
+					JsonObject errorResult = new JsonObject(res);
 					rountingContext.response().end(errorResult.encodePrettily());
 				}
 			});
