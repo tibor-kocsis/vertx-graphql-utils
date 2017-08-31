@@ -25,7 +25,7 @@ public class AsyncGraphQLExecImpl implements AsyncGraphQLExec {
 		this.graphQL = GraphQL.newGraphQL(schema)
 				.queryExecutionStrategy(new RxExecutionStrategy())
 				.mutationExecutionStrategy(new RxExecutionStrategy())
-				.build();;
+				.build();
 	}
 
 	@SuppressWarnings("unchecked")
