@@ -30,6 +30,19 @@ GraphQLObjectType query = newObject()
     .build(); 
 ```
  
+ - An async interface for executing GraphQL queries
+ 
+```java
+GraphQLSchema schema = ...
+AsyncGraphQLExec asyncGraphQL = AsyncGraphQLExec.create(schema);
+Future<JsonObject> queryResult = asyncGraphQL.executeQuery("query { hello }", null, null, null); // query, operationName, context, variables
+queryResult.setHandler(res -> {
+	JsonObject json = res.result();
+	context.assertEquals(new JsonObject().put("hello", "world"), json);
+	async.complete();
+}); 
+```
+ 
  - Some util functions to parse IDL schema from file or content
  
  ```java
@@ -38,5 +51,9 @@ public GraphQLSchema fromString(String schemaString, RuntimeWiring runtimeWiring
   ```
  
  - The [graphql-rxjava](https://github.com/nfl/graphql-rxjava)'s RxExecutionStrategy ported to [graphql-java 3.0](https://github.com/tibor-kocsis/graphql-rxjava) 
+
+## Examples
+
+See the unit tests for detailed examples and use cases.
 
  
