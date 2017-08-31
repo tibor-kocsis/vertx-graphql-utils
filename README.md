@@ -1,6 +1,6 @@
 # vertx-graphql-utils
 
-This project contains the following helper classes you need to write a GraphQL vert.x http server:
+This project contains the following helper classes you may need to write a GraphQL vert.x http server:
 
  - a Vert.x RouteHandler for executing GraphQL queries with a Vertx HttpServer (only POST supported for now, for request/response formats see the [GraphQL docs](http://graphql.org/learn/serving-over-http/))
  
