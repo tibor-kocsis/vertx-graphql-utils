@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.github.tkocsis.vertx.graphql.queryexecutor.AsyncExecutionException;
 import com.github.tkocsis.vertx.graphql.queryexecutor.AsyncGraphQLExec;
 
 import graphql.schema.GraphQLSchema;
@@ -33,13 +34,18 @@ public class GraphQLPostRouteHandler {
 			asyncGraphQLExec.executeQuery(query, operationName, rountingContext, variables).setHandler(queryResult -> {
 				if (queryResult.succeeded()) {
 					JsonObject json = queryResult.result();
-					rountingContext.response().end(json.encodePrettily());
+					rountingContext.response().end(new JsonObject().put("data", json).encode());
 				} else {
 					Map<String, Object> res = new HashMap<>();
-					res.put("errors", queryResult.cause() != null ? Arrays.asList(queryResult.cause()) : Arrays.asList(new Exception("Internal error")));
 					res.put("data", null);
+					if (queryResult.cause() instanceof AsyncExecutionException) {
+						AsyncExecutionException ex = (AsyncExecutionException) queryResult.cause();
+						res.put("errors", ex.getErrors());
+					} else {
+						res.put("errors", queryResult.cause() != null ? Arrays.asList(queryResult.cause()) : Arrays.asList(new Exception("Internal error")));
+					}
 					JsonObject errorResult = new JsonObject(res);
-					rountingContext.response().end(errorResult.encodePrettily());
+					rountingContext.response().end(errorResult.encode());
 				}
 			});
 		};

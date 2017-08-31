@@ -6,9 +6,12 @@ import java.util.Map;
 
 import com.github.tkocsis.graphql.execution.RxExecutionResult;
 import com.github.tkocsis.graphql.execution.RxExecutionStrategy;
+import com.github.tkocsis.vertx.graphql.queryexecutor.AsyncExecutionException;
 import com.github.tkocsis.vertx.graphql.queryexecutor.AsyncGraphQLExec;
 
+import graphql.ExceptionWhileDataFetching;
 import graphql.GraphQL;
+import graphql.GraphQLError;
 import graphql.schema.GraphQLSchema;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
@@ -25,25 +28,27 @@ public class AsyncGraphQLExecImpl implements AsyncGraphQLExec {
 				.build();;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Future<JsonObject> executeQuery(String query, String operationName, Object context, Map<String, Object> variables) {
 		Future<JsonObject> fut = Future.future();
 		
 		RxExecutionResult rxExecutionResult = (RxExecutionResult) graphQL.execute(query, operationName, context, variables != null ? variables : new HashMap<>());
 		Observable.zip(rxExecutionResult.getDataObservable(), rxExecutionResult.getErrorsObservable(), (data, errors) -> {
-			Map<String, Object> res = new HashMap<>();
 			if (errors.size() > 0) {
-				res.put("errors", errors);
-			} 
-			res.put("data", data);
-			return res;
+				fut.fail(new AsyncExecutionException("Exception during execution", errors));
+			} else {
+				fut.complete(new JsonObject((Map<String, Object>) data));
+			}
+			return 0;
 		}).subscribe(e -> {
-			fut.complete(new JsonObject(e));
 		}, error -> {
-			Map<String, Object> res = new HashMap<>();
-			res.put("errors", Arrays.asList(error));
-			res.put("data", null);
-			fut.complete(new JsonObject(res));
+			try {
+				fut.fail(new AsyncExecutionException("Exception during execution", 
+						Arrays.asList((error instanceof GraphQLError) ? (GraphQLError) error : (GraphQLError) new ExceptionWhileDataFetching(error))));
+			} catch (Exception e) {
+				fut.fail(e);
+			}
 		});
 		return fut;
 	}
