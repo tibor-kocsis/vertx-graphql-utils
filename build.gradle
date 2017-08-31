@@ -1,5 +1,15 @@
 apply plugin: 'java'
 
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.2'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
+    }
+}
+
 repositories {
     jcenter()
 }
@@ -22,4 +32,6 @@ dependencies {
 	testCompile "io.vertx:vertx-unit:$vertxVersion"
 	testCompile "io.vertx:vertx-web-client:$vertxVersion"
 }
+
+apply from: 'deploy.gradle'
 
