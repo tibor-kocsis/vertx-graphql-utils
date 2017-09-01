@@ -1,6 +1,6 @@
 # vertx-graphql-utils
 
-This project contains some helper classes you may need to write a GraphQL vert.x http server. Currently it is uses graphql-java 3.0, porting to the new Async interface introduced in graphql-java 4.0 in progress. 
+This project contains some helper classes you may need to write a GraphQL vert.x http server. It is uses graphql-java 4 async execution environment combined with vert.x Future.  
 
 ### Getting started with gradle
 
@@ -17,7 +17,7 @@ Dependency:
 
 ```
 dependencies {
-  compile 'com.github.tibor-kocsis:vertx-graphql-utils:1.0.0'
+  compile 'com.github.tibor-kocsis:vertx-graphql-utils:2.0.0'
 }
 
 ```
@@ -33,7 +33,7 @@ router.route().handler(BodyHandler.create()); // we need the body
 router.post("/graphql").handler(GraphQLPostRouteHandler.create(schema));
 ```
 
- - AsyncDataFetcher interface
+ - AsyncDataFetcher interface with a Handler<AsyncResult> parameter you should use
 
 
 ```java
@@ -52,7 +52,7 @@ GraphQLObjectType query = newObject()
     .build(); 
 ```
  
- - An async interface for executing GraphQL queries
+ - A vert.x Future based interface for executing GraphQL queries
  
 ```java
 GraphQLSchema schema = ...
