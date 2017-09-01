@@ -1,6 +1,6 @@
 siteUrl = https://github.com/tibor-kocsis/vertx-graphql-utils
 gitUrl = https://github.com/tibor-kocsis/vertx-graphql-utils
-version = 0.0.1
+version = 1.0.0
 groupId = com.github.tibor-kocsis
 id = vertx-graphql-utils
 name = vertx-graphql-utils 

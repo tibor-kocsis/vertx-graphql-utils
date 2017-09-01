@@ -1,6 +1,28 @@
 # vertx-graphql-utils
 
-This project contains the following helper classes you may need to write a GraphQL vert.x http server:
+This project contains some helper classes you may need to write a GraphQL vert.x http server. Currently it is uses graphql-java 3.0, porting to the new Async interface introduced in graphql-java 4.0 in progress. 
+
+### Getting started with gradle
+
+Make sure jcenter is among your repos:
+
+```
+repositories {
+    jcenter()
+}
+
+```
+
+Dependency:
+
+```
+dependencies {
+  compile 'com.github.tibor-kocsis:vertx-graphql-utils:1.0.0'
+}
+
+```
+
+### Short description of the utils
 
  - a Vert.x RouteHandler for executing GraphQL queries with a Vertx HttpServer (only POST supported for now, for request/response formats see the [GraphQL docs](http://graphql.org/learn/serving-over-http/))
  
@@ -48,12 +70,9 @@ queryResult.setHandler(res -> {
  ```java
 public Future<GraphQLSchema> fromFile(String path, RuntimeWiring runtimeWiring);
 public GraphQLSchema fromString(String schemaString, RuntimeWiring runtimeWiring);
-  ```
- 
- - The [graphql-rxjava](https://github.com/nfl/graphql-rxjava)'s RxExecutionStrategy ported to [graphql-java 3.0](https://github.com/tibor-kocsis/graphql-rxjava) 
+ ```
 
-## Examples
+### Examples and usages
 
 See the unit tests for detailed examples and use cases.
 
- 
