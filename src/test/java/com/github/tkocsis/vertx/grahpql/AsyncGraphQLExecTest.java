@@ -15,6 +15,7 @@ import com.github.tkocsis.vertx.graphql.queryexecutor.AsyncGraphQLExec;
 
 import graphql.ExceptionWhileDataFetching;
 import graphql.GraphQLError;
+import graphql.InvalidSyntaxError;
 import graphql.Scalars;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLList;
@@ -226,6 +227,40 @@ public class AsyncGraphQLExecTest {
 			context.assertEquals(1, errors.size());
 			context.assertEquals(ExceptionWhileDataFetching.class, errors.get(0).getClass());
 			context.assertEquals("TestFailure", ((ExceptionWhileDataFetching) errors.get(0)).getException().getMessage());
+			async.complete();
+		});
+	}
+	
+		@Test
+	public void test_invalidQuery(TestContext context) {
+		Async async = context.async();
+		
+		// complete the execution with a failedFuture
+		AsyncDataFetcher<String> asyncDataFetcher = (env, handler) -> {
+			handler.handle(Future.failedFuture(new RuntimeException("TestFailure")));
+		};
+		
+		GraphQLObjectType query = GraphQLObjectType.newObject()
+		        .name("query")
+		        .field(GraphQLFieldDefinition.newFieldDefinition()
+		                .name("hello")
+		                .type(Scalars.GraphQLString)
+		                .dataFetcher(asyncDataFetcher))
+		        .build(); 
+		
+		GraphQLSchema schema = GraphQLSchema.newSchema()
+				.query(query)
+				.build();
+		
+		AsyncGraphQLExec asyncGraphQL = AsyncGraphQLExec.create(schema);
+		Future<JsonObject> queryResult = asyncGraphQL.executeQuery("query { hello ", null, null, null);
+		queryResult.setHandler(res -> {
+			context.assertTrue(res.failed());
+			context.assertEquals(AsyncExecutionException.class, res.cause().getClass());
+			List<GraphQLError> errors = ((AsyncExecutionException) res.cause()).getErrors();
+//			System.out.println(errors);
+			context.assertEquals(1, errors.size());
+			context.assertEquals(InvalidSyntaxError.class, errors.get(0).getClass());
 			async.complete();
 		});
 	}

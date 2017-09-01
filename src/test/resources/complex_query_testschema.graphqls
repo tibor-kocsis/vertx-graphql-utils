@@ -1,0 +1,23 @@
+schema {
+	query: RootQueries
+	mutation: RootMutations
+}
+
+type RootQueries {
+	echo(p: String): String
+}
+
+type RootMutations {
+	insertHero(hero: HeroInput): Hero
+}
+
+type Hero {
+	id: ID
+	name: String
+	age: Int
+}
+
+input HeroInput {
+	name: String
+	age: Int
+}
