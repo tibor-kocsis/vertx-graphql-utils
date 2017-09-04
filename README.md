@@ -61,8 +61,6 @@ AsyncGraphQLExec asyncGraphQL = AsyncGraphQLExec.create(schema);
 Future<JsonObject> queryResult = asyncGraphQL.executeQuery("query { hello }", null, null, null); // query, operationName, context, variables
 queryResult.setHandler(res -> {
 	JsonObject json = res.result();
-	context.assertEquals(new JsonObject().put("hello", "world"), json);
-	async.complete();
 }); 
 ```
  
