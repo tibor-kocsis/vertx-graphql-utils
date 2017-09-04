@@ -123,6 +123,8 @@ public class MinimalVertxExample {
 }
 ```
 
+Fetching data with GraphiQL Chrome extension: 
+
 ![GrapiQL Chrome extension](https://raw.githubusercontent.com/tibor-kocsis/vertx-graphql-utils/master/doc/graphiql.png "GraphiQL Chrome extension")
 
 See the unit tests for more detailed examples and use cases.
