@@ -113,7 +113,7 @@ public class MinimalVertxExample {
 				.query(query)
 				.build();
 		
-		router.route("/graphql").handler(BodyHandler.create()); // we need the body
+		router.post("/graphql").handler(BodyHandler.create()); // we need the body
 		// create the graphql endpoint
 		router.post("/graphql").handler(GraphQLPostRouteHandler.create(schema));
 		
