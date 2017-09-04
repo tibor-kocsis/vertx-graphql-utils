@@ -73,10 +73,10 @@ public class RouteHandlerComplexQueryTest {
 		
 		// create the router
 		Router router = Router.router(vertx);
-		router.route().handler(BodyHandler.create()); // we need the body
 		
 		// create the graphql endpoint
 		getSchema().compose(schema -> {
+			router.post("/graphql").handler(BodyHandler.create()); // we need the body
 			router.post("/graphql").handler(GraphQLPostRouteHandler.create(schema));
 			
 			// start the http server and make a call
@@ -91,7 +91,9 @@ public class RouteHandlerComplexQueryTest {
 			 * Perform a query with embedded parameter
 			 */
 			Future<HttpResponse<JsonObject>> webClientResult = Future.future();
-			JsonObject query = new JsonObject().put("query", "query { echo(p: \"myvalue\") }");
+			JsonObject query = new JsonObject()
+					.put("query", "query { echo(p: \"myvalue\") }")
+					.put("variables", new JsonObject());
 			webClient.post("/graphql").as(BodyCodec.jsonObject()).sendJson(query, webClientResult);
 			return webClientResult;
 		}).compose(response -> {
@@ -106,7 +108,7 @@ public class RouteHandlerComplexQueryTest {
 			Future<HttpResponse<JsonObject>> webClientResult = Future.future();
 			JsonObject query = new JsonObject()
 					.put("query", "query ($param: String) { echo(p: $param) }")
-					.put("variables", new JsonObject().put("param", "myvalue").encode());
+					.put("variables", new JsonObject().put("param", "myvalue"));
 			webClient.post("/graphql").as(BodyCodec.jsonObject()).sendJson(query, webClientResult);
 			return webClientResult;
 		}).compose(response -> {
@@ -122,7 +124,7 @@ public class RouteHandlerComplexQueryTest {
 					.put("query", "mutation ($hero: HeroInput) { insertHero(hero: $hero) { id, name, age } }")
 					.put("variables", new JsonObject().put("hero", new JsonObject()
 							.put("name", "testName")
-							.put("age", 30)).encode());
+							.put("age", 30)));
 			webClient.post("/graphql").as(BodyCodec.jsonObject()).sendJson(query, webClientResult);
 			return webClientResult;
 		}).map(response -> {

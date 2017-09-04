@@ -79,7 +79,7 @@ public class RouteHandlerTest {
 						.type("HelloWorld", typeWiring -> typeWiring.dataFetcher("hello", helloFieldFetcher))
 						.build());
 		
-		router.route().handler(BodyHandler.create()); // we need the body
+		router.route("/graphql").handler(BodyHandler.create()); // we need the body
 		
 		// prepare a routing context variable
 		router.route().handler(routingContext -> {
@@ -116,4 +116,5 @@ public class RouteHandlerTest {
 			async.complete();
 		});
 	}
+	
 }

@@ -76,14 +76,13 @@ public class RouteHandlerFailureTest {
 						.type("HelloWorld", typeWiring -> typeWiring.dataFetcher("hello", helloFieldFetcher))
 						.build());
 		
-		router.route().handler(BodyHandler.create()); // we need the body
-		
 		// prepare a routing context variable
 		router.route().handler(routingContext -> {
 			routingContext.put("testdata", "testvalue");
 			routingContext.next();
 		});
 		
+		router.post("/graphql").handler(BodyHandler.create()); // we need the body
 		// create the graphql endpoint
 		router.post("/graphql").handler(GraphQLPostRouteHandler.create(schema));
 		
@@ -101,7 +100,7 @@ public class RouteHandlerFailureTest {
 			return webClientResult;
 		}).map(response -> {
 			// the response
-			context.assertEquals(200, response.statusCode());
+			context.assertEquals(400, response.statusCode());
 			context.assertNotNull(response.body());
 			
 			JsonObject body = response.body();

@@ -22,13 +22,13 @@ public class GraphQLPostRouteHandler {
 			try {
 				JsonObject bodyJson = rountingContext.getBodyAsJson();
 				String query = bodyJson.getString("query");
-				String bodyVariables = bodyJson.getString("variables");
+				JsonObject bodyVariables = bodyJson.getJsonObject("variables");
 				String operationName = bodyJson.getString("operationName");
 				Map<String, Object> variables;
 				if (bodyVariables == null || bodyVariables.isEmpty()) {
 					variables = new HashMap<>();
 				} else {
-					variables = new JsonObject(bodyVariables).getMap();
+					variables = bodyVariables.getMap();
 				}
 				
 				// execute the graphql query
@@ -46,14 +46,14 @@ public class GraphQLPostRouteHandler {
 							res.put("errors", queryResult.cause() != null ? Arrays.asList(queryResult.cause()) : Arrays.asList(new Exception("Internal error")));
 						}
 						JsonObject errorResult = new JsonObject(res);
-						rountingContext.response().end(errorResult.encode());
+						rountingContext.response().setStatusCode(400).end(errorResult.encode());
 					}
 				});
 			} catch (Exception e) {
 				Map<String, Object> res = new HashMap<>();
 				res.put("errors", Arrays.asList(e));
 				JsonObject errorResult = new JsonObject(res);
-				rountingContext.response().end(errorResult.encode());
+				rountingContext.response().setStatusCode(400).end(errorResult.encode());
 			}
 		};
 	}

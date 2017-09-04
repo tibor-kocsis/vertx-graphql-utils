@@ -17,19 +17,20 @@ Dependency:
 
 ```
 dependencies {
-  compile 'com.github.tibor-kocsis:vertx-graphql-utils:2.0.0'
+  compile 'com.github.tibor-kocsis:vertx-graphql-utils:2.0.1'
 }
 
 ```
 
-### Short description of the utils
+### Project contents
 
- - a Vert.x RouteHandler for executing GraphQL queries with a Vertx HttpServer (only POST supported for now, for request/response formats see the [GraphQL docs](http://graphql.org/learn/serving-over-http/))
+ - Vert.x RouteHandler for executing GraphQL queries with a Vertx HttpServer (only POST supported for now, for request/response formats see the [GraphQL docs](http://graphql.org/learn/serving-over-http/))
  
  
 ```java
+Router router = Router.router(vertx); // vert.x router
 GraphQLSchema schema = ...
-router.route().handler(BodyHandler.create()); // we need the body
+router.post("/graphql").handler(BodyHandler.create()); // we need the body
 router.post("/graphql").handler(GraphQLPostRouteHandler.create(schema));
 ```
 
@@ -68,11 +69,61 @@ queryResult.setHandler(res -> {
  - Some util functions to parse IDL schema from file or content
  
  ```java
-public Future<GraphQLSchema> fromFile(String path, RuntimeWiring runtimeWiring);
-public GraphQLSchema fromString(String schemaString, RuntimeWiring runtimeWiring);
+Future<GraphQLSchema> fromFile(String path, RuntimeWiring runtimeWiring);
+GraphQLSchema fromString(String schemaString, RuntimeWiring runtimeWiring);
  ```
 
-### Examples and usages
+### Minimal Vert.x HttpServer example
 
-See the unit tests for detailed examples and use cases.
+```java
+import com.github.tkocsis.vertx.graphql.datafetcher.AsyncDataFetcher;
+import com.github.tkocsis.vertx.graphql.routehandler.GraphQLPostRouteHandler;
+
+import graphql.Scalars;
+import graphql.schema.GraphQLFieldDefinition;
+import graphql.schema.GraphQLObjectType;
+import graphql.schema.GraphQLSchema;
+import io.vertx.core.Vertx;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.BodyHandler;
+
+public class MinimalVertxExample {
+	public static void main(String[] args) {
+		Vertx vertx = Vertx.vertx();
+		// create the router
+		Router router = Router.router(vertx);
+		
+		// setup an async datafetcher
+		AsyncDataFetcher<String> helloFieldFetcher = (env, handler) -> {
+			vertx.<String> executeBlocking(fut -> {
+				fut.complete("world");
+			}, handler);
+		};
+		
+		// setup graphql helloworld schema
+		GraphQLObjectType query = GraphQLObjectType.newObject()
+		        .name("query")
+		        .field(GraphQLFieldDefinition.newFieldDefinition()
+		                .name("hello")
+		                .type(Scalars.GraphQLString)
+		                .dataFetcher(helloFieldFetcher))
+		        .build(); 
+		
+		GraphQLSchema schema = GraphQLSchema.newSchema()
+				.query(query)
+				.build();
+		
+		router.route("/graphql").handler(BodyHandler.create()); // we need the body
+		// create the graphql endpoint
+		router.post("/graphql").handler(GraphQLPostRouteHandler.create(schema));
+		
+		// start the http server and make a call
+		vertx.createHttpServer().requestHandler(router::accept).listen(8080);
+	}
+}
+```
+
+![alt text](https://github.com/tibor-kocsis/vertx-graphql-utils/tree/master/doc/graphiql.png "GraphiQL Chrome extension")
+
+See the unit tests for more detailed examples and use cases.
 
