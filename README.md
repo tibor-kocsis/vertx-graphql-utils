@@ -123,7 +123,7 @@ public class MinimalVertxExample {
 }
 ```
 
-![alt text](https://github.com/tibor-kocsis/vertx-graphql-utils/tree/master/doc/graphiql.png "GraphiQL Chrome extension")
+![GrapiQL Chrome extension](https://raw.githubusercontent.com/tibor-kocsis/vertx-graphql-utils/master/doc/graphiql.png "GraphiQL Chrome extension")
 
 See the unit tests for more detailed examples and use cases.
 
