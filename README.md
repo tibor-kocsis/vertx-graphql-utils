@@ -1,6 +1,6 @@
 # vertx-graphql-utils
 
-This project contains some helper classes you may need to write a GraphQL vert.x http server. It uses graphql-java 4 async execution environment combined with vert.x Future.  
+This project contains some helper classes you may need to write a GraphQL vert.x http server. It uses graphql-java async execution environment combined with vert.x Future.  
 
 ### Getting started with gradle
 
@@ -17,7 +17,7 @@ Dependency:
 
 ```
 dependencies {
-  compile 'com.github.tibor-kocsis:vertx-graphql-utils:2.0.1'
+  compile 'com.github.tibor-kocsis:vertx-graphql-utils:2.0.2'
 }
 
 ```
