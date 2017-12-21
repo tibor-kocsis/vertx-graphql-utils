@@ -2,7 +2,6 @@ package com.github.tkocsis.vertx.grahpql;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
@@ -10,7 +9,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.github.tkocsis.vertx.graphql.codec.GraphQLBodyCodec;
 import com.github.tkocsis.vertx.graphql.datafetcher.AsyncDataFetcher;
+import com.github.tkocsis.vertx.graphql.model.GraphQLQueryResult;
 import com.github.tkocsis.vertx.graphql.routehandler.GraphQLPostRouteHandler;
 import com.github.tkocsis.vertx.graphql.utils.GraphQLQueryBuilder;
 import com.github.tkocsis.vertx.graphql.utils.IDLSchemaParser;
@@ -28,12 +29,11 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
-import io.vertx.ext.web.codec.BodyCodec;
 import io.vertx.ext.web.handler.BodyHandler;
 
 @RunWith(VertxUnitRunner.class)
-public class RouteHandlerComplexQueryTest {
-	
+public class GraphQLBodyCodecTest {
+
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public static class Hero {
 		public int id;
@@ -88,60 +88,27 @@ public class RouteHandlerComplexQueryTest {
 			this.httpServer = httpServer;
 			webClient= WebClient.create(vertx, new WebClientOptions().setDefaultPort(httpPort));
 			
-			/**
-			 * Perform a query with embedded parameter
-			 */
-			Future<HttpResponse<JsonObject>> webClientResult = Future.future();
-			JsonObject query = GraphQLQueryBuilder.newQuery("query { echo(p: \"myvalue\") }").build();
-			webClient.post("/graphql").as(BodyCodec.jsonObject()).sendJson(query, webClientResult);
-			return webClientResult;
-		}).compose(response -> {
-			// the response
-			context.assertEquals(200, response.statusCode());
-			context.assertNotNull(response.body());
-			context.assertEquals("myvalue", response.body().getJsonObject("data").getString("echo"));
-			
-			/**
-			 * Perform a query with variables json
-			 */
-			Future<HttpResponse<JsonObject>> webClientResult = Future.future();
-			JsonObject query = GraphQLQueryBuilder.newQuery("query ($param: String) { echo(p: $param) }")
-					.var("param",  "myvalue")
+			Future<HttpResponse<GraphQLQueryResult>> webClientResult = Future.future();
+			JsonObject query = GraphQLQueryBuilder
+					.newQuery("query ($id: ID!) { hero(id: $id) { id name age } }")
+					.var("id", 10)
 					.build();
 			
-			webClient.post("/graphql").as(BodyCodec.jsonObject()).sendJson(query, webClientResult);
+			webClient.post("/graphql").as(GraphQLBodyCodec.queryResult()).sendJson(query, webClientResult);
 			return webClientResult;
-		}).compose(response -> {
-			context.assertEquals(200, response.statusCode());
-			context.assertNotNull(response.body());
-			context.assertEquals("myvalue", response.body().getJsonObject("data").getString("echo"));
-			
-			/**
-			 * Perform a query with variables json
-			 */
-			Future<HttpResponse<JsonObject>> webClientResult = Future.future();
-			JsonObject query = GraphQLQueryBuilder.newQuery("mutation ($hero: HeroInput) { insertHero(hero: $hero) { id, name, age } }")
-					.var("hero", new JsonObject()
-							.put("name", "testName")
-							.put("age", 30))
-					.build();
-			
-			webClient.post("/graphql").as(BodyCodec.jsonObject()).sendJson(query, webClientResult);
-			return webClientResult;
-		}).map(response -> {
-			// the response
-			context.assertEquals(200, response.statusCode());
-			context.assertNotNull(response.body());
-			Hero newHero = response.body().getJsonObject("data").getJsonObject("insertHero").mapTo(Hero.class);
-			context.assertEquals(10, newHero.id);
-			context.assertEquals(30, newHero.age);
-			context.assertEquals("testName", newHero.name);
-			return 0;
 		}).setHandler(res -> {
 			if (res.failed()) {
 				context.fail(res.cause());
 				return;
 			}
+			context.assertEquals(200, res.result().statusCode());
+			context.assertNotNull(res.result().body());
+			
+			GraphQLQueryResult queryResult = res.result().body();
+			Hero hero = queryResult.getData("hero", Hero.class);
+			context.assertEquals(10, hero.id);
+			context.assertEquals(20, hero.age);
+			context.assertEquals("Hero Name", hero.name);
 			async.complete();
 		});
 	}
@@ -149,26 +116,14 @@ public class RouteHandlerComplexQueryTest {
 	private Future<GraphQLSchema> getSchema() {
 		return IDLSchemaParser.create(vertx).fromFile("complex_query_testschema.graphqls",
 				RuntimeWiring.newRuntimeWiring()
-						.type("RootQueries", typeWiring -> typeWiring.dataFetcher("echo", helloFetcher()))
-						.type("RootMutations", typeWiring -> typeWiring.dataFetcher("insertHero", heroMutation()))
+						.type("RootQueries", typeWiring -> typeWiring.dataFetcher("hero", heroFetcher()))
 						.build());
 	}
 	
-	private AsyncDataFetcher<String> helloFetcher() {
-		return (env, handler) -> {
-			vertx.<String> executeBlocking(fut -> {
-				fut.complete(env.getArgument("p"));
-			}, handler);
-		};
-	}
-	
-	private AsyncDataFetcher<Hero> heroMutation() {
+	private AsyncDataFetcher<Hero> heroFetcher() {
 		return (env, handler) -> {
 			vertx.<Hero> executeBlocking(fut -> {
-				@SuppressWarnings("unchecked")
-				JsonObject heroJson = new JsonObject((Map<String, Object>) env.getArgument("hero"));
-				Hero hero = heroJson.mapTo(Hero.class);
-				hero.id = 10;
+				Hero hero = new Hero(Integer.parseInt(env.getArgument("id")), "Hero Name", 20);
 				fut.complete(hero);
 			}, handler);
 		};

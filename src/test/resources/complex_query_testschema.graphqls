@@ -5,6 +5,7 @@ schema {
 
 type RootQueries {
 	echo(p: String): String
+	hero(id: ID!): Hero
 }
 
 type RootMutations {

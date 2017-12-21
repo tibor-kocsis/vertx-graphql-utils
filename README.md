@@ -17,7 +17,7 @@ Dependency:
 
 ```
 dependencies {
-  compile 'com.github.tibor-kocsis:vertx-graphql-utils:2.0.2'
+  compile 'com.github.tibor-kocsis:vertx-graphql-utils:2.0.3'
 }
 
 ```
@@ -71,21 +71,47 @@ Future<GraphQLSchema> fromFile(String path, RuntimeWiring runtimeWiring);
 GraphQLSchema fromString(String schemaString, RuntimeWiring runtimeWiring);
  ```
 
+ - A vert.x web BodyCodec and a basic query builder to perform graphql queries
+ 
+ ```java
+class Hero {
+	// fields: id, name, age
+} 
+ 
+JsonObject query = GraphQLQueryBuilder
+		.newQuery("query ($id: ID!) { hero(id: $id) { id name age } }")
+		.var("id", 10)
+		.build();
+
+webClient.post("/graphql").as(GraphQLBodyCodec.queryResult()).sendJson(query, res -> {
+	GraphQLQueryResult body = res.result().body();
+	Hero hero = body.getData("hero", Hero.class);
+}
+ ```
+ 
 ### Minimal Vert.x HttpServer example
 
 ```java
+import com.github.tkocsis.vertx.graphql.codec.GraphQLBodyCodec;
 import com.github.tkocsis.vertx.graphql.datafetcher.AsyncDataFetcher;
+import com.github.tkocsis.vertx.graphql.model.GraphQLQueryResult;
 import com.github.tkocsis.vertx.graphql.routehandler.GraphQLPostRouteHandler;
+import com.github.tkocsis.vertx.graphql.utils.GraphQLQueryBuilder;
 
 import graphql.Scalars;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.handler.BodyHandler;
 
+@Ignore
 public class MinimalVertxExample {
+
 	public static void main(String[] args) {
 		Vertx vertx = Vertx.vertx();
 		// create the router
@@ -117,6 +143,14 @@ public class MinimalVertxExample {
 		
 		// start the http server and make a call
 		vertx.createHttpServer().requestHandler(router::accept).listen(8080);
+		
+		// test with vert.x webclient
+		WebClient webClient= WebClient.create(vertx, new WebClientOptions().setDefaultPort(8080));
+		JsonObject gqlQuery = GraphQLQueryBuilder.newQuery("query { hello }").build();
+		webClient.post("/graphql").as(GraphQLBodyCodec.queryResult()).sendJson(gqlQuery, res -> {
+			GraphQLQueryResult queryResult = res.result().body();
+			System.out.println(queryResult.getData("hello", String.class)); // prints world
+		});
 	}
 }
 ```
