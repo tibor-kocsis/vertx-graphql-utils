@@ -16,7 +16,7 @@ repositories {
 }
 
 ext {
-	vertxVersion = "3.4.2"
+	vertxVersion = "3.5.0"
 }
 
 sourceCompatibility = "1.8"
