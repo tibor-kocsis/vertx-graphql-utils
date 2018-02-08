@@ -10,6 +10,7 @@ type RootQueries {
 
 type RootMutations {
 	insertHero(hero: HeroInput): Hero
+	insertHeros(heros: [HeroInput]): [Hero]
 }
 
 type Hero {
@@ -22,3 +23,4 @@ input HeroInput {
 	name: String
 	age: Int
 }
+

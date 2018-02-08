@@ -2,7 +2,10 @@ package com.github.tkocsis.vertx.grahpql;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.After;
 import org.junit.Before;
@@ -20,6 +23,7 @@ import graphql.schema.idl.RuntimeWiring;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -137,6 +141,31 @@ public class RouteHandlerComplexQueryTest {
 			context.assertEquals(30, newHero.age);
 			context.assertEquals("testName", newHero.name);
 			return 0;
+		}).compose(v -> {
+			/**
+			 * Perform a query with variables json
+			 */
+			Future<HttpResponse<JsonObject>> webClientResult = Future.future();
+			JsonObject query = GraphQLQueryBuilder.newQuery("mutation ($heros: [HeroInput]) { insertHeros(heros: $heros) { id, name, age } }")
+					.var("heros", new JsonArray().add(
+							new JsonObject()
+								.put("name", "testName")
+								.put("age", 30)).add(
+							new JsonObject()
+								.put("name", "testName2")
+								.put("age", 31)))
+					.build();
+			System.out.println("Request: " + query.encodePrettily());
+			webClient.post("/graphql").as(BodyCodec.jsonObject()).sendJson(query, webClientResult);
+			return webClientResult;
+		}).map(response -> {
+			// the response
+			context.assertEquals(200, response.statusCode());
+			context.assertNotNull(response.body());
+			JsonArray newHeros = response.body().getJsonObject("data").getJsonArray("insertHeros");
+			context.assertTrue(newHeros.stream().map(i -> ((JsonObject) i).mapTo(Hero.class)).anyMatch(hero -> hero.id == 10));
+			context.assertTrue(newHeros.stream().map(i -> ((JsonObject) i).mapTo(Hero.class)).anyMatch(hero -> hero.id == 11));
+			return 0;
 		}).setHandler(res -> {
 			if (res.failed()) {
 				context.fail(res.cause());
@@ -151,6 +180,7 @@ public class RouteHandlerComplexQueryTest {
 				RuntimeWiring.newRuntimeWiring()
 						.type("RootQueries", typeWiring -> typeWiring.dataFetcher("echo", helloFetcher()))
 						.type("RootMutations", typeWiring -> typeWiring.dataFetcher("insertHero", heroMutation()))
+						.type("RootMutations", typeWiring -> typeWiring.dataFetcher("insertHeros", herosMutation()))
 						.build());
 	}
 	
@@ -170,6 +200,22 @@ public class RouteHandlerComplexQueryTest {
 				Hero hero = heroJson.mapTo(Hero.class);
 				hero.id = 10;
 				fut.complete(hero);
+			}, handler);
+		};
+	}
+	
+	private AsyncDataFetcher<List<Hero>> herosMutation() {
+		return (env, handler) -> {
+			vertx.<List<Hero>> executeBlocking(fut -> {
+				JsonArray jsonArray = new JsonArray((List<?>) env.getArgument("heros"));
+				
+				List<Hero> result = new ArrayList<>();
+				AtomicInteger ctr = new AtomicInteger(10);
+				jsonArray.stream().map(i -> ((JsonObject) i).mapTo(Hero.class)).forEach(i -> {
+					i.id = ctr.getAndIncrement();
+					result.add(i);
+				});
+				fut.complete(result);
 			}, handler);
 		};
 	}
