@@ -7,15 +7,20 @@ import java.util.Map;
 import com.github.tkocsis.vertx.graphql.queryexecutor.AsyncExecutionException;
 import com.github.tkocsis.vertx.graphql.queryexecutor.AsyncGraphQLExec;
 
+import graphql.GraphQL;
 import graphql.schema.GraphQLSchema;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 public class GraphQLPostRouteHandler {
-
+	
 	public static Handler<RoutingContext> create(GraphQLSchema schema) {
-		AsyncGraphQLExec asyncGraphQLExec = AsyncGraphQLExec.create(schema);
+		return create(GraphQL.newGraphQL(schema));
+	}
+
+	public static Handler<RoutingContext> create(GraphQL.Builder builder) {
+		AsyncGraphQLExec asyncGraphQLExec = AsyncGraphQLExec.create(builder);
 		
 		// get the body and parse
 		return rountingContext -> {
