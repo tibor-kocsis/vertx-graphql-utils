@@ -14,6 +14,7 @@ import com.github.tkocsis.vertx.graphql.queryexecutor.AsyncExecutionException;
 import com.github.tkocsis.vertx.graphql.queryexecutor.AsyncGraphQLExec;
 
 import graphql.ExceptionWhileDataFetching;
+import graphql.GraphQL;
 import graphql.GraphQLError;
 import graphql.InvalidSyntaxError;
 import graphql.Scalars;
@@ -63,6 +64,33 @@ public class AsyncGraphQLExecTest {
 				.build();
 		
 		AsyncGraphQLExec asyncGraphQL = AsyncGraphQLExec.create(schema);
+		Future<JsonObject> queryResult = asyncGraphQL.executeQuery("query { hello }", null, null, null);
+		queryResult.setHandler(res -> {
+			JsonObject json = res.result();
+			context.assertEquals(new JsonObject().put("hello", "world"), json);
+			async.complete();
+		});
+	}
+	
+	@Test
+	public void test_helloWorld_createWithBuilder(TestContext context) {
+		Async async = context.async();
+		
+		GraphQLObjectType query = GraphQLObjectType.newObject()
+		        .name("query")
+		        .field(GraphQLFieldDefinition.newFieldDefinition()
+		                .name("hello")
+		                .type(Scalars.GraphQLString)
+		                .dataFetcher(environment -> {
+		        			return "world";
+		        		}))
+		        .build(); 
+		
+		GraphQLSchema schema = GraphQLSchema.newSchema()
+				.query(query)
+				.build();
+		
+		AsyncGraphQLExec asyncGraphQL = AsyncGraphQLExec.create(GraphQL.newGraphQL(schema));
 		Future<JsonObject> queryResult = asyncGraphQL.executeQuery("query { hello }", null, null, null);
 		queryResult.setHandler(res -> {
 			JsonObject json = res.result();

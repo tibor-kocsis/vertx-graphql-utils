@@ -11,7 +11,6 @@ import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphQLError;
-import graphql.schema.GraphQLSchema;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
@@ -19,10 +18,10 @@ public class AsyncGraphQLExecImpl implements AsyncGraphQLExec {
 	
 	GraphQL graphQL;
 	
-	public AsyncGraphQLExecImpl(GraphQLSchema schema) {
-		this.graphQL = GraphQL.newGraphQL(schema).build();
+	public AsyncGraphQLExecImpl(GraphQL.Builder builder) {
+		this.graphQL = builder.build();
 	}
-
+	
 	@Override
 	public Future<JsonObject> executeQuery(String query, String operationName, Object context, Map<String, Object> variables) {
 		Future<JsonObject> fut = Future.future();
