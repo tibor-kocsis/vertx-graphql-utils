@@ -17,7 +17,7 @@ Dependency:
 
 ```
 dependencies {
-  compile 'com.github.tibor-kocsis:vertx-graphql-utils:2.0.5'
+  compile 'com.github.tibor-kocsis:vertx-graphql-utils:2.0.6'
 }
 
 ```
