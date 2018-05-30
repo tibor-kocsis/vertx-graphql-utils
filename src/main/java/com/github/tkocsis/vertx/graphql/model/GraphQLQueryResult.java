@@ -42,10 +42,32 @@ public class GraphQLQueryResult {
 		throw new CannotCastException("Can't map " + value.getClass() + " to " + mapTo.getName());
 	}
 	
+	public JsonObject getData() {
+		return data;
+	}
+	
 	public JsonArray getErrors() {
 		if (errors == null) {
 			return new JsonArray();
 		}
 		return errors;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder result = new StringBuilder();
+		result.append("data=");
+		if (data != null) {
+			result.append(data.encodePrettily()).append("; ");
+		} else {
+			result.append("null; ");
+		}
+		result.append("errors=");
+		if (errors != null) {
+			result.append(errors.encodePrettily()).append(";");
+		} else {
+			result.append("null");
+		}
+		return result.toString();
 	}
 }
